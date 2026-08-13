@@ -38,6 +38,27 @@ extension_button_content_visual_index=0
 extension_button_inner_rectangle_index::Int
 extension_button_inner_rectangle_index=1
 
+extension_button_root_vector_index::Int
+extension_button_root_vector_index=0
+
+extension_button_unpressed_unhovered_offset::Int
+extension_button_unpressed_unhovered_offset=0
+
+extension_button_unpressed_hovered_offset::Int
+extension_button_unpressed_hovered_offset=2
+
+extension_button_pressed_unhovered_offset::Int
+extension_button_pressed_unhovered_offset=4
+
+extension_button_pressed_hovered_offset::Int
+extension_button_pressed_hovered_offset=6
+
+extension_button_inner_rectangle_base_offset::Int
+extension_button_inner_rectangle_base_offset=1
+
+extension_button_outer_rectangle_base_offset::Int
+extension_button_outer_rectangle_base_offset=2
+
 button_widget_trigger::(Engine a b c d e->Engine a b c d e)->Event b->Engine a b c d e->Widget a b c d e->(Widget a b c d e,Engine a b c d e->Engine a b c d e)
 button_widget_trigger this_action event _ widget=case event of
     At {window_id,action}->case widget of
@@ -72,7 +93,7 @@ view_button::Widget a b c d e->Widget a b c d e
 view_button this_widget=case this_widget of
     Widget_trigger {widget}->case widget of
         Vector {vector_widget}->case vector_widget DV.! extension_button_visual_index of
-            Vector_visual {arrange,size,vector_visual}->let hovered=get_store_widget (vector_widget DV.! extension_button_hovered_index) in let pressed=get_store_widget (vector_widget DV.! extension_button_pressed_index) in let offset=if pressed then if hovered then 6 else 4 else if hovered then 2 else 0 in Vector_visual {arrange=arrange,collect_order=(2+offset) DS.<| (1+offset) DS.<| DS.singleton extension_button_content_visual_index,size=size,vector_visual=vector_visual}
+            Vector_visual {arrange,size,vector_visual}->let hovered=get_store_widget (vector_widget DV.! extension_button_hovered_index) in let offset=if get_store_widget (vector_widget DV.! extension_button_pressed_index) then if hovered then extension_button_pressed_hovered_offset else extension_button_pressed_unhovered_offset else if hovered then extension_button_unpressed_hovered_offset else extension_button_unpressed_unhovered_offset in Vector_visual {arrange=arrange,collect_order=(extension_button_outer_rectangle_base_offset+offset) DS.<| (extension_button_inner_rectangle_base_offset+offset) DS.<| DS.singleton extension_button_content_visual_index,size=size,vector_visual=vector_visual}
             _->EE.quick_error "view_button" 0
         _->EE.quick_error "view_button" 1
     _->EE.quick_error "view_button" 2
@@ -107,6 +128,13 @@ collect_button maybe_border projection_path leaf_id selector collect_strategy en
 {-# INLINE extension_button_window_id_index #-}
 {-# INLINE extension_button_content_visual_index #-}
 {-# INLINE extension_button_inner_rectangle_index #-}
+{-# INLINE extension_button_root_vector_index #-}
+{-# INLINE extension_button_unpressed_unhovered_offset #-}
+{-# INLINE extension_button_unpressed_hovered_offset #-}
+{-# INLINE extension_button_pressed_unhovered_offset #-}
+{-# INLINE extension_button_pressed_hovered_offset #-}
+{-# INLINE extension_button_inner_rectangle_base_offset #-}
+{-# INLINE extension_button_outer_rectangle_base_offset #-}
 {-# INLINE above_button #-}
 {-# INLINE view_button_bool #-}
 {-# INLINE view_button #-}
