@@ -77,9 +77,9 @@ page_widget_trigger step_size event _ widget=case event of
             Press {press,change}->case press of
                 Press_down->if view_page_bool widget extension_page_selected_index then case change of
                     Key_down->(scroll_page (scroll_text step_size) widget,id)
-                    Key_up->(scroll_page (scroll_text step_size) widget,id)
-                    Key_page_down->(scroll_page (scroll_text step_size) widget,id)
-                    Key_page_up->(scroll_page (scroll_text step_size) widget,id)
+                    Key_up->(scroll_page (scroll_text (negate step_size)) widget,id)
+                    Key_page_down->(scroll_page scroll_bottom_text widget,id)
+                    Key_page_up->(scroll_page scroll_top_text widget,id)
                     _->(widget,id)
                 else (widget,id)
                 _->(widget,id)
