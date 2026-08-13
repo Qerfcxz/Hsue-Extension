@@ -59,14 +59,14 @@ scroll_page transform widget=case widget of
 create_page_request::(Event a->Engine b a c d e->Maybe Int)->(Event a->Engine b a c d e->Widget b a c d e->(Widget b a c d e,Engine b a c d e->Engine b a c d e))->Extension_widget_request b a c d e->Widget_request b a c d e
 create_page_request next widget_trigger page_request=case page_request of
     Page {window_id,arrange,visual_request,inner_thickness,outer_thickness,inner_color,outer_color,inner_hovered_color,outer_hovered_color,inner_selected_color,outer_selected_color,inner_hovered_selected_color,outer_hovered_selected_color}->case visual_request of
-        Text_request {text_width,text_height}->let center_x=arrange.point.x in let center_y=arrange.point.y in let inner_width=text_width/2+inner_thickness in let inner_height=text_height/2+inner_thickness in let outer_width=inner_width+outer_thickness in let outer_height=inner_height+outer_thickness in Widget_trigger_request {next=next,widget_trigger=widget_trigger,widget_request=Vector_request {index=0,vector_widget_request=DS.singleton (Vector_visual_request {arrange=arrange,collect_order=6 DS.<| 5 DS.<| DS.singleton extension_page_text_visual_index,vector_visual_request=DV.fromList [visual_request,create_rectangle_request center_x center_y inner_color inner_width inner_height,create_rectangle_request center_x center_y outer_color outer_width outer_height,create_rectangle_request center_x center_y inner_hovered_color inner_width inner_height,create_rectangle_request center_x center_y outer_hovered_color outer_width outer_height,create_rectangle_request center_x center_y inner_selected_color inner_width inner_height,create_rectangle_request center_x center_y outer_selected_color outer_width outer_height,create_rectangle_request center_x center_y inner_hovered_selected_color inner_width inner_height,create_rectangle_request center_x center_y outer_hovered_selected_color outer_width outer_height]}) DS.|> Store_request {store=convert False} DS.|> Store_request {store=convert False} DS.|> Store_request {store=convert True} DS.|> Store_request {store=convert window_id}}}
+        Text_request {text_width,text_height}->let center_x=arrange.point.x in let center_y=arrange.point.y in let inner_width=text_width/2+inner_thickness in let inner_height=text_height/2+inner_thickness in let outer_width=inner_width+outer_thickness in let outer_height=inner_height+outer_thickness in Widget_trigger_request {next=next,widget_trigger=widget_trigger,widget_request=Vector_request {index=0,vector_widget_request=DS.singleton (Vector_visual_request {arrange=arrange,collect_order=2 DS.<| 1 DS.<| DS.singleton extension_page_text_visual_index,vector_visual_request=DV.fromList [visual_request,create_rectangle_request center_x center_y inner_color inner_width inner_height,create_rectangle_request center_x center_y outer_color outer_width outer_height,create_rectangle_request center_x center_y inner_hovered_color inner_width inner_height,create_rectangle_request center_x center_y outer_hovered_color outer_width outer_height,create_rectangle_request center_x center_y inner_selected_color inner_width inner_height,create_rectangle_request center_x center_y outer_selected_color outer_width outer_height,create_rectangle_request center_x center_y inner_hovered_selected_color inner_width inner_height,create_rectangle_request center_x center_y outer_hovered_selected_color outer_width outer_height]}) DS.|> Store_request {store=convert False} DS.|> Store_request {store=convert False} DS.|> Store_request {store=convert True} DS.|> Store_request {store=convert window_id}}}
         _->EE.quick_error "create_page_request" 0
     _->EE.quick_error "create_page_request" 1
 
 page_widget_trigger::FCT.CFloat->Event b->Engine a b c d e->Widget a b c d e->(Widget a b c d e,Engine a b c d e->Engine a b c d e)
 page_widget_trigger step_size event _ widget=case event of
     At {window_id,action}->case widget of
-        Vector {vector_widget}->if window_id==get_store_int (vector_widget DV.! extension_page_window_id_index) then case action of
+        Vector {vector_widget}->if window_id==get_store_widget (vector_widget DV.! extension_page_window_id_index) then case action of
             Move {x,y}->let above=above_page x y (vector_widget DV.! extension_page_visual_index) in let hovered=view_page_bool widget extension_page_hovered_index in if above/=hovered then (update_vector_widget extension_page_dirty_index (update_store_widget (const True)) (update_vector_widget extension_page_hovered_index (update_store_widget (const above)) widget),if above then \engine->engine {request=engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer}} else \engine->engine {request=engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default}}) else (widget,id)
             Click {press,mouse_button,x=x,y=y}->case mouse_button of
                 Mouse_button_left->case press of
@@ -95,11 +95,6 @@ above_page x y widget=case widget of
             Arrange {point,matrix}->let determinant=matrix.x_x*matrix.y_y-matrix.x_y*matrix.y_x in let new_x=x-point.x-matrix.x in let new_y=y-point.y-matrix.y in abs (matrix.x+(matrix.y_y*new_x-matrix.x_y*new_y)/determinant)<=half_width&&abs (matrix.y+(matrix.x_x*new_y-matrix.y_x*new_x)/determinant)<=half_height
         _->EE.quick_error "above_page" 0
     _->EE.quick_error "above_page" 1
-
-get_store_int::Widget a b c d e->Int
-get_store_int widget=case widget of
-    Store {store}->convert store
-    _->EE.quick_error "get_store_int" 0
 
 view_page_bool::Widget a b c d e->Int->Bool
 view_page_bool widget index=case widget of
@@ -150,7 +145,6 @@ collect_page maybe_border projection_path leaf_id selector collect_strategy engi
 {-# INLINE update_text #-}
 {-# INLINE scroll_page #-}
 {-# INLINE above_page #-}
-{-# INLINE get_store_int #-}
 {-# INLINE view_page_bool #-}
 {-# INLINE update_page_bool #-}
 {-# INLINE view_page #-}
