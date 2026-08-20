@@ -6,7 +6,6 @@ module Slider where
 
 import Common
 import Page
-import Engine.Collector
 import Engine.Container
 import Engine.Operation
 import Engine.Projection
@@ -14,7 +13,6 @@ import Engine.Selector
 import Engine.Type
 import qualified Error.Error as EE
 import qualified Control.Monad.ST as CMST
-import qualified Data.Functor.Compose as DFC
 import qualified Data.Sequence as DS
 import qualified Data.Vector as DV
 import qualified Data.Vector.Mutable as DVM
@@ -95,12 +93,6 @@ extension_slider_horizontal_flag_false=0
 extension_slider_horizontal_flag_true::Int
 extension_slider_horizontal_flag_true=1
 
-above_first_triangle::FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->Bool
-above_first_triangle x y first_triangle_center_x first_triangle_center_y radius=above_box x y first_triangle_center_x first_triangle_center_y radius radius
-
-above_second_triangle::FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->Bool
-above_second_triangle x y second_triangle_center_x second_triangle_center_y radius=above_box x y second_triangle_center_x second_triangle_center_y radius radius
-
 above_thumb::Bool->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->Bool
 above_thumb horizontal x y thumb_position thumb_length radius this_x this_y=if horizontal then above_box x y thumb_position this_y (thumb_length/2) radius else above_box x y this_x thumb_position radius (thumb_length/2)
 
@@ -117,10 +109,10 @@ slider_widget_trigger leaf_id selector getter setter this_x this_y radius track_
             Move {x,y}->if thumb_state==extension_slider_state_pressed then let scrollable=content_size-viewport_size in let track_movable_length=max 0 (track_geometric_length-new_thumb_length) in let final_offset=max 0 (min scrollable (get_store_widget (vector_widget DV.! extension_slider_drag_start_offset_index)+(if track_movable_length==0 then 0 else (if horizontal then x-drag_start_position else drag_start_position-y)/track_movable_length*scrollable))) in let new_widget=set_slider_updated (update_vector_widget extension_slider_thumb_position_index (update_store_widget (const (calculate_thumb_position horizontal content_size viewport_size final_offset track_start_position track_end_position new_thumb_length))) (update_vector_widget extension_slider_thumb_length_index (update_store_widget (const new_thumb_length)) (update_vector_widget extension_slider_cached_offset_index (update_store_widget (const final_offset)) widget))) in case setter cached_offset final_offset of
                 Just update_function->(new_widget,\this_engine->this_engine {leaf=intmap_update leaf_id (update_projection_object (selector_update (const update_function) selector)) this_engine.leaf})
                 Nothing->(new_widget,id)
-            else let hit_first_triangle_flag=above_first_triangle x y first_triangle_center_x first_triangle_center_y radius in let hit_second_triangle_flag=above_second_triangle x y second_triangle_center_x second_triangle_center_y radius in let hit_thumb_flag=above_thumb horizontal x y new_thumb_position new_thumb_length radius this_x this_y in let new_first_triangle_state=if first_triangle_state==extension_slider_state_pressed then extension_slider_state_pressed else if hit_first_triangle_flag then extension_slider_state_hovered else extension_slider_state_normal in let new_second_triangle_state=if second_triangle_state==extension_slider_state_pressed then extension_slider_state_pressed else if hit_second_triangle_flag then extension_slider_state_hovered else extension_slider_state_normal in let new_thumb_state=if thumb_state==extension_slider_state_pressed then extension_slider_state_pressed else if hit_thumb_flag then extension_slider_state_hovered else extension_slider_state_normal in let state_changed=first_triangle_state/=new_first_triangle_state||second_triangle_state/=new_second_triangle_state||thumb_state/=new_thumb_state||current_offset/=cached_offset||new_thumb_length/=thumb_length||new_thumb_position/=thumb_position in let updated_widget=set_slider_updated (update_vector_widget extension_slider_thumb_position_index (update_store_widget (const new_thumb_position)) (update_vector_widget extension_slider_thumb_length_index (update_store_widget (const new_thumb_length)) (update_vector_widget extension_slider_cached_offset_index (update_store_widget (const current_offset)) (update_vector_widget extension_slider_thumb_state_index (update_store_widget (const new_thumb_state)) (update_vector_widget extension_slider_second_triangle_state_index (update_store_widget (const new_second_triangle_state)) (update_vector_widget extension_slider_first_triangle_state_index (update_store_widget (const new_first_triangle_state)) widget)))))) in let was_hovered=extension_slider_state_normal<first_triangle_state||extension_slider_state_normal<second_triangle_state||extension_slider_state_normal<thumb_state in let is_hovered=hit_first_triangle_flag||hit_second_triangle_flag||hit_thumb_flag in let cursor_action=if was_hovered/=is_hovered then if is_hovered then \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer}} else \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default}} else id in if state_changed then (updated_widget,cursor_action) else (widget,id)
+            else let hit_first_triangle_flag=above_triangle x y first_triangle_center_x first_triangle_center_y radius in let hit_second_triangle_flag=above_triangle x y second_triangle_center_x second_triangle_center_y radius in let hit_thumb_flag=above_thumb horizontal x y new_thumb_position new_thumb_length radius this_x this_y in let new_first_triangle_state=if first_triangle_state==extension_slider_state_pressed then extension_slider_state_pressed else if hit_first_triangle_flag then extension_slider_state_hovered else extension_slider_state_normal in let new_second_triangle_state=if second_triangle_state==extension_slider_state_pressed then extension_slider_state_pressed else if hit_second_triangle_flag then extension_slider_state_hovered else extension_slider_state_normal in let new_thumb_state=if thumb_state==extension_slider_state_pressed then extension_slider_state_pressed else if hit_thumb_flag then extension_slider_state_hovered else extension_slider_state_normal in let state_changed=first_triangle_state/=new_first_triangle_state||second_triangle_state/=new_second_triangle_state||thumb_state/=new_thumb_state||current_offset/=cached_offset||new_thumb_length/=thumb_length||new_thumb_position/=thumb_position in let updated_widget=set_slider_updated (update_vector_widget extension_slider_thumb_position_index (update_store_widget (const new_thumb_position)) (update_vector_widget extension_slider_thumb_length_index (update_store_widget (const new_thumb_length)) (update_vector_widget extension_slider_cached_offset_index (update_store_widget (const current_offset)) (update_vector_widget extension_slider_thumb_state_index (update_store_widget (const new_thumb_state)) (update_vector_widget extension_slider_second_triangle_state_index (update_store_widget (const new_second_triangle_state)) (update_vector_widget extension_slider_first_triangle_state_index (update_store_widget (const new_first_triangle_state)) widget)))))) in let was_hovered=extension_slider_state_normal<first_triangle_state||extension_slider_state_normal<second_triangle_state||extension_slider_state_normal<thumb_state in let is_hovered=hit_first_triangle_flag||hit_second_triangle_flag||hit_thumb_flag in let cursor_action=if was_hovered/=is_hovered then if is_hovered then \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer}} else \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default}} else id in if state_changed then (updated_widget,cursor_action) else (widget,id)
             Click {press,mouse_button,x,y}->case mouse_button of
                 Mouse_button_left->case press of
-                    Press_down->let hit_first_triangle_flag=above_first_triangle x y first_triangle_center_x first_triangle_center_y radius in let hit_second_triangle_flag=above_second_triangle x y second_triangle_center_x second_triangle_center_y radius in let hit_thumb_flag=above_thumb horizontal x y thumb_position thumb_length radius this_x this_y in if hit_first_triangle_flag then let new_offset=max 0 (cached_offset-step_size) in let new_widget=set_slider_updated (update_vector_widget extension_slider_thumb_position_index (update_store_widget (const (calculate_thumb_position horizontal content_size viewport_size new_offset track_start_position track_end_position new_thumb_length))) (update_vector_widget extension_slider_thumb_length_index (update_store_widget (const new_thumb_length)) (update_vector_widget extension_slider_cached_offset_index (update_store_widget (const new_offset)) (update_vector_widget extension_slider_first_triangle_state_index (update_store_widget (const extension_slider_state_pressed)) widget)))) in if cached_offset/=new_offset then case setter cached_offset new_offset of
+                    Press_down->let hit_first_triangle_flag=above_triangle x y first_triangle_center_x first_triangle_center_y radius in let hit_second_triangle_flag=above_triangle x y second_triangle_center_x second_triangle_center_y radius in let hit_thumb_flag=above_thumb horizontal x y thumb_position thumb_length radius this_x this_y in if hit_first_triangle_flag then let new_offset=max 0 (cached_offset-step_size) in let new_widget=set_slider_updated (update_vector_widget extension_slider_thumb_position_index (update_store_widget (const (calculate_thumb_position horizontal content_size viewport_size new_offset track_start_position track_end_position new_thumb_length))) (update_vector_widget extension_slider_thumb_length_index (update_store_widget (const new_thumb_length)) (update_vector_widget extension_slider_cached_offset_index (update_store_widget (const new_offset)) (update_vector_widget extension_slider_first_triangle_state_index (update_store_widget (const extension_slider_state_pressed)) widget)))) in if cached_offset/=new_offset then case setter cached_offset new_offset of
                         Just update_function->(new_widget,\this_engine->this_engine {leaf=intmap_update leaf_id (update_projection_object (selector_update (const update_function) selector)) this_engine.leaf})
                         Nothing->(new_widget,id)
                     else (new_widget,id) else if hit_second_triangle_flag then let new_offset=min (max 0 (content_size-viewport_size)) (cached_offset+step_size) in let new_widget=set_slider_updated (update_vector_widget extension_slider_thumb_position_index (update_store_widget (const (calculate_thumb_position horizontal content_size viewport_size new_offset track_start_position track_end_position new_thumb_length))) (update_vector_widget extension_slider_thumb_length_index (update_store_widget (const new_thumb_length)) (update_vector_widget extension_slider_cached_offset_index (update_store_widget (const new_offset)) (update_vector_widget extension_slider_second_triangle_state_index (update_store_widget (const extension_slider_state_pressed)) widget)))) in if cached_offset/=new_offset then case setter cached_offset new_offset of
@@ -130,7 +122,7 @@ slider_widget_trigger leaf_id selector getter setter this_x this_y radius track_
                         Just update_function->(new_widget,\this_engine->this_engine {leaf=intmap_update leaf_id (update_projection_object (selector_update (const update_function) selector)) this_engine.leaf})
                         Nothing->(new_widget,id)
                     else (new_widget,id) else (widget,id)
-                    Press_up->let hit_first_triangle_flag=above_first_triangle x y first_triangle_center_x first_triangle_center_y radius in let hit_second_triangle_flag=above_second_triangle x y second_triangle_center_x second_triangle_center_y radius in let hit_thumb_flag=above_thumb horizontal x y thumb_position thumb_length radius this_x this_y in (set_slider_updated (update_vector_widget extension_slider_thumb_state_index (update_store_widget (const (if hit_thumb_flag then extension_slider_state_hovered else extension_slider_state_normal))) (update_vector_widget extension_slider_second_triangle_state_index (update_store_widget (const (if hit_second_triangle_flag then extension_slider_state_hovered else extension_slider_state_normal))) (update_vector_widget extension_slider_first_triangle_state_index (update_store_widget (const (if hit_first_triangle_flag then extension_slider_state_hovered else extension_slider_state_normal))) widget))),id)
+                    Press_up->let hit_first_triangle_flag=above_triangle x y first_triangle_center_x first_triangle_center_y radius in let hit_second_triangle_flag=above_triangle x y second_triangle_center_x second_triangle_center_y radius in let hit_thumb_flag=above_thumb horizontal x y thumb_position thumb_length radius this_x this_y in (set_slider_updated (update_vector_widget extension_slider_thumb_state_index (update_store_widget (const (if hit_thumb_flag then extension_slider_state_hovered else extension_slider_state_normal))) (update_vector_widget extension_slider_second_triangle_state_index (update_store_widget (const (if hit_second_triangle_flag then extension_slider_state_hovered else extension_slider_state_normal))) (update_vector_widget extension_slider_first_triangle_state_index (update_store_widget (const (if hit_first_triangle_flag then extension_slider_state_hovered else extension_slider_state_normal))) widget))),id)
                 _->(widget,id)
             _->if current_offset/=cached_offset||new_thumb_position/=thumb_position||new_thumb_length/=thumb_length then (set_slider_updated (update_vector_widget extension_slider_thumb_position_index (update_store_widget (const new_thumb_position)) (update_vector_widget extension_slider_thumb_length_index (update_store_widget (const new_thumb_length)) (update_vector_widget extension_slider_cached_offset_index (update_store_widget (const current_offset)) widget))),id) else (widget,id)
         else (widget,id)
@@ -138,71 +130,37 @@ slider_widget_trigger leaf_id selector getter setter this_x this_y radius track_
     _->(widget,id)
 
 set_slider_updated::Widget a b c d e->Widget a b c d e
-set_slider_updated=update_vector_widget extension_slider_dirty_index (update_store_widget (const True))
-
-view_slider_bool::Widget a b c d e->Int->Bool
-view_slider_bool widget index=case widget of
-    Vector {vector_widget}->case vector_widget DV.! index of
-        Store {store}->convert store
-        _->EE.quick_error "view_slider_bool" 0
-    _->EE.quick_error "view_slider_bool" 1
-
-update_slider_bool::(Bool->Bool)->Int->Widget a b c d e->Widget a b c d e
-update_slider_bool update index=update_vector_widget index (update_store_widget update)
+set_slider_updated=update_vector_bool (const True) extension_slider_dirty_index
 
 update_thumb_arrange::Bool->FCT.CFloat->FCT.CFloat->FCT.CFloat->Arrange->Arrange
 update_thumb_arrange horizontal thumb_position x y arrange=case arrange of
     Arrange {matrix,red,green,blue,alpha}->Arrange {point=Point {x=if horizontal then thumb_position else x,y=if horizontal then y else thumb_position},matrix=matrix,red=red,green=green,blue=blue,alpha=alpha}
 
 view_slider::Widget a b c d e->Widget a b c d e
-view_slider this_widget=case this_widget of
-    Widget_trigger {widget}->case widget of
-        Vector {vector_widget}->case vector_widget DV.! extension_slider_visual_index of
-            Vector_visual {arrange=first_arrange,size=visual_size,vector_visual}->let thumb_state=get_store_widget (vector_widget DV.! extension_slider_thumb_state_index) in let thumb_length=get_store_widget (vector_widget DV.! extension_slider_thumb_length_index) in let thumb_position=get_store_widget (vector_widget DV.! extension_slider_thumb_position_index) in let horizontal=(get_store_widget (vector_widget DV.! extension_slider_horizontal_index)::Int)==extension_slider_horizontal_flag_true in let x=get_store_widget (vector_widget DV.! extension_slider_x_index) in let y=get_store_widget (vector_widget DV.! extension_slider_y_index) in let thumb_visual=vector_visual DV.! (extension_slider_thumb_visual_base_index+thumb_state) in case thumb_visual of
-                Rectangle {arrange=second_arrange,half_width,half_height}->let new_vector_visual=DV.modify (\this_vector_widget->DVM.write this_vector_widget (extension_slider_thumb_visual_base_index+thumb_state) (Rectangle {arrange=update_thumb_arrange horizontal thumb_position x y second_arrange,half_width=if horizontal then thumb_length/2 else half_width,half_height=if horizontal then half_height else thumb_length/2})) vector_visual in Vector_visual {arrange=first_arrange,collect_order=DS.fromList [extension_slider_outer_rectangle_visual_index,extension_slider_inner_rectangle_visual_index,extension_slider_first_triangle_visual_base_index+get_store_widget (vector_widget DV.! extension_slider_first_triangle_state_index),extension_slider_second_triangle_visual_base_index+get_store_widget (vector_widget DV.! extension_slider_second_triangle_state_index),extension_slider_thumb_visual_base_index+thumb_state],size=visual_size,vector_visual=new_vector_visual}
-                _->EE.quick_error "view_slider" 0
-            _->EE.quick_error "view_slider" 1
-        _->EE.quick_error "view_slider" 2
-    _->EE.quick_error "view_slider" 3
+view_slider=view_extension_widget view_slider_a
+
+view_slider_a::DV.Vector (Widget a b c d e)->Widget a b c d e
+view_slider_a vector_widget=case vector_widget DV.! extension_slider_visual_index of
+    Vector_visual {arrange=first_arrange,size=visual_size,vector_visual}->let thumb_state=get_store_widget (vector_widget DV.! extension_slider_thumb_state_index) in let thumb_length=get_store_widget (vector_widget DV.! extension_slider_thumb_length_index) in let thumb_position=get_store_widget (vector_widget DV.! extension_slider_thumb_position_index) in let horizontal=(get_store_widget (vector_widget DV.! extension_slider_horizontal_index)::Int)==extension_slider_horizontal_flag_true in let x=get_store_widget (vector_widget DV.! extension_slider_x_index) in let y=get_store_widget (vector_widget DV.! extension_slider_y_index) in let thumb_visual=vector_visual DV.! (extension_slider_thumb_visual_base_index+thumb_state) in case thumb_visual of
+        Rectangle {arrange=second_arrange,half_width,half_height}->let new_vector_visual=DV.modify (\this_vector_widget->DVM.write this_vector_widget (extension_slider_thumb_visual_base_index+thumb_state) (Rectangle {arrange=update_thumb_arrange horizontal thumb_position x y second_arrange,half_width=if horizontal then thumb_length/2 else half_width,half_height=if horizontal then half_height else thumb_length/2})) vector_visual in Vector_visual {arrange=first_arrange,collect_order=DS.fromList [extension_slider_outer_rectangle_visual_index,extension_slider_inner_rectangle_visual_index,extension_slider_first_triangle_visual_base_index+get_store_widget (vector_widget DV.! extension_slider_first_triangle_state_index),extension_slider_second_triangle_visual_base_index+get_store_widget (vector_widget DV.! extension_slider_second_triangle_state_index),extension_slider_thumb_visual_base_index+thumb_state],size=visual_size,vector_visual=new_vector_visual}
+        _->EE.quick_error "view_slider_a" 0
+    _->EE.quick_error "view_slider_a" 1
 
 update_slider::Widget a b c d e->Maybe (Widget a b c d e)
-update_slider this_widget=case this_widget of
-    Widget_trigger {next,widget_trigger,widget}->case widget of
-        Vector {}->if view_slider_bool widget extension_slider_dirty_index then Just (Widget_trigger {next=next,widget_trigger=widget_trigger,widget=update_slider_bool (const False) extension_slider_dirty_index widget}) else Nothing
-        _->EE.quick_error "update_slider" 0
-    _->EE.quick_error "update_slider" 1
-
-maybe_update_collect_slider::Custom_widget e=>Maybe (Border FCT.CFloat)->Projection_path->Int->Selector a->Insert_strategy->Engine b c d e f->Engine b c d e f
-maybe_update_collect_slider maybe_border projection_path leaf_id selector collect_strategy engine=case DFC.getCompose (functor_lookup_projection_widget projection_path (\widget->DFC.Compose {getCompose=fmap (\this_widget->(to_collect engine.u engine.v maybe_border (view_slider this_widget),this_widget)) (selector_monad_update (const update_slider) selector widget)}) engine) of
-    Nothing->engine
-    Just (submit,new_engine)->new_engine {leaf=intmap_update leaf_id (update_projection_object (collect_a submit collect_strategy)) new_engine.leaf}
-
-maybe_collect_update_slider::Custom_widget e=>Maybe (Border FCT.CFloat)->Projection_path->Int->Selector a->Insert_strategy->Engine b c d e f->Engine b c d e f
-maybe_collect_update_slider maybe_border projection_path leaf_id selector collect_strategy engine=let (update,maybe_engine)=DFC.getCompose (functor_lookup_projection_widget projection_path (\widget->DFC.Compose {getCompose=(intmap_update leaf_id (update_projection_object (collect_a (to_collect engine.u engine.v maybe_border (view_slider widget)) collect_strategy)),selector_monad_update (const update_slider) selector widget)}) engine) in case maybe_engine of
-    Nothing->engine
-    Just new_engine->new_engine {leaf=update new_engine.leaf}
-
-collect_slider::Custom_widget e=>Maybe (Border FCT.CFloat)->Projection_path->Int->Selector a->Insert_strategy->Engine b c d e f->Engine b c d e f
-collect_slider maybe_border projection_path leaf_id selector collect_strategy engine=engine {leaf=intmap_update leaf_id (update_projection_object (selector_update (const (collect_a (to_collect engine.u engine.v maybe_border (view_slider (lookup_projection_widget projection_path engine))) collect_strategy)) selector)) engine.leaf}
+update_slider=update_extension_widget extension_slider_dirty_index
 
 page_getter::Widget a b c d e->(FCT.CFloat,FCT.CFloat,FCT.CFloat)
-page_getter widget=case widget of
-    Widget_trigger {widget=w}->case w of
-        Vector {vector_widget}->case vector_widget DV.! extension_page_visual_index of
-            Vector_visual {vector_visual}->case vector_visual DV.! extension_page_text_visual_index of
-                Text {half_height,current_y,min_y,max_y}->(max_y-min_y+2*half_height,2*half_height,current_y-min_y)
-                _->EE.quick_error "page_getter" 0
-            _->EE.quick_error "page_getter" 1
-        _->EE.quick_error "page_getter" 2
-    _->EE.quick_error "page_getter" 3
+page_getter widget=case extract_extension_widget_vector widget DV.! extension_page_visual_index of
+    Vector_visual {vector_visual}->case vector_visual DV.! extension_page_text_visual_index of
+        Text {half_height,current_y,min_y,max_y}->(max_y-min_y+2*half_height,2*half_height,current_y-min_y)
+        _->EE.quick_error "page_getter" 0
+    _->EE.quick_error "page_getter" 1
 
 page_setter::FCT.CFloat->FCT.CFloat->Maybe (Widget a b c d e->Widget a b c d e)
 page_setter cached_offset offset=if cached_offset==offset then Nothing else Just (page_setter_a offset)
 
 page_setter_a::FCT.CFloat->Widget a b c d e->Widget a b c d e
-page_setter_a offset this_widget=case this_widget of
-    Widget_trigger {next,widget_trigger,widget}->Widget_trigger {next=next,widget_trigger=widget_trigger,widget=page_setter_b offset widget}
-    _->EE.quick_error "page_setter_a" 0
+page_setter_a offset=modify_extension_widget (page_setter_b offset)
 
 page_setter_b::FCT.CFloat->Widget a b c d e->Widget a b c d e
 page_setter_b offset widget=case widget of
@@ -257,20 +215,14 @@ page_setter_f offset visual=case visual of
 {-# INLINE extension_slider_state_pressed #-}
 {-# INLINE extension_slider_horizontal_flag_false #-}
 {-# INLINE extension_slider_horizontal_flag_true #-}
-{-# INLINE above_first_triangle #-}
-{-# INLINE above_second_triangle #-}
 {-# INLINE above_thumb #-}
 {-# INLINE calculate_thumb_length #-}
 {-# INLINE calculate_thumb_position #-}
+{-# INLINE slider_widget_trigger #-}
 {-# INLINE set_slider_updated #-}
-{-# INLINE view_slider_bool #-}
-{-# INLINE update_slider_bool #-}
 {-# INLINE update_thumb_arrange #-}
 {-# INLINE view_slider #-}
 {-# INLINE update_slider #-}
-{-# INLINE maybe_update_collect_slider #-}
-{-# INLINE maybe_collect_update_slider #-}
-{-# INLINE collect_slider #-}
 {-# INLINE page_getter #-}
 {-# INLINE page_setter #-}
 {-# INLINE page_setter_a #-}

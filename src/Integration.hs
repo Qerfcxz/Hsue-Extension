@@ -9,6 +9,7 @@ import Common
 import Page
 import Slider
 import Type
+import Engine.Collector
 import Engine.Type
 import qualified Error.Error as EE
 import qualified Data.Sequence as DS
@@ -25,21 +26,21 @@ create_extension_widget_request next action extension_widget_request=case extens
 
 maybe_update_collect_extension_widget::Custom_widget e=>Tag->Maybe (Border FCT.CFloat)->Projection_path->Int->Selector a->Insert_strategy->Engine b c d e f->Engine b c d e f
 maybe_update_collect_extension_widget tag=case tag of
-    Page_tag->maybe_update_collect_page
-    Button_tag->maybe_update_collect_button
-    Slider_tag->maybe_update_collect_slider
+    Page_tag->maybe_update_collect update_page view_page
+    Button_tag->maybe_update_collect update_button view_button
+    Slider_tag->maybe_update_collect update_slider view_slider
 
 maybe_collect_update_extension_widget::Custom_widget e=>Tag->Maybe (Border FCT.CFloat)->Projection_path->Int->Selector a->Insert_strategy->Engine b c d e f->Engine b c d e f
 maybe_collect_update_extension_widget tag=case tag of
-    Page_tag->maybe_collect_update_page
-    Button_tag->maybe_collect_update_button
-    Slider_tag->maybe_collect_update_slider
+    Page_tag->maybe_collect_update update_page view_page
+    Button_tag->maybe_collect_update update_button view_button
+    Slider_tag->maybe_collect_update update_slider view_slider
 
 collect_extension_widget::Custom_widget e=>Tag->Maybe (Border FCT.CFloat)->Projection_path->Int->Selector a->Insert_strategy->Engine b c d e f->Engine b c d e f
 collect_extension_widget tag=case tag of
-    Page_tag->collect_page
-    Button_tag->collect_button
-    Slider_tag->collect_slider
+    Page_tag->collect view_page
+    Button_tag->collect view_button
+    Slider_tag->collect view_slider
 
 {-# INLINE create_extension_widget_request #-}
 {-# INLINE maybe_update_collect_extension_widget #-}
