@@ -81,25 +81,27 @@ create_page_request next widget_trigger page_request=case page_request of
 page_widget_trigger::FCT.CFloat->Event b->Engine a b c d e->Widget a b c d e->(Widget a b c d e,Engine a b c d e->Engine a b c d e)
 page_widget_trigger step_size event _ widget=case event of
     At {window_id,action}->case widget of
-        Vector {vector_widget}->if window_id==get_store_widget (vector_widget DV.! extension_page_window_id_index) then case action of
-            Move {x,y}->let above=above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) in if above/=view_vector_bool widget extension_page_hovered_index then (update_vector_bool (const True) extension_page_dirty_index (update_vector_bool (const above) extension_page_hovered_index widget),if above then \engine->engine {request=engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer}} else \engine->engine {request=engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default}}) else (widget,id)
-            Click {press,mouse_button,x=x,y=y}->case mouse_button of
-                Mouse_button_left->case press of
-                    Press_down->let above=above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) in if above/=view_vector_bool widget extension_page_selected_index then (update_vector_bool (const True) extension_page_dirty_index (update_vector_bool (const above) extension_page_selected_index widget),id) else (widget,id)
+        Vector {vector_widget}->if window_id==get_store_widget (vector_widget DV.! extension_page_window_id_index)
+            then case action of
+                Press {press,change}->case press of
+                    Press_down->if view_vector_bool widget extension_page_selected_index 
+                        then case change of
+                            Key_down->(scroll_page (scroll_text step_size) widget,id)
+                            Key_up->(scroll_page (scroll_text (negate step_size)) widget,id)
+                            Key_page_down->(scroll_page scroll_bottom_text widget,id)
+                            Key_page_up->(scroll_page scroll_top_text widget,id)
+                            _->(widget,id)
+                        else (widget,id)
                     _->(widget,id)
-                _->(widget,id)
-            Scroll {x,y,delta_y}->if above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) then (scroll_page (scroll_text (negate delta_y*step_size)) widget,id) else (widget,id)
-            Press {press,change}->case press of
-                Press_down->if view_vector_bool widget extension_page_selected_index then case change of
-                    Key_down->(scroll_page (scroll_text step_size) widget,id)
-                    Key_up->(scroll_page (scroll_text (negate step_size)) widget,id)
-                    Key_page_down->(scroll_page scroll_bottom_text widget,id)
-                    Key_page_up->(scroll_page scroll_top_text widget,id)
+                Click {press,mouse_button,x=x,y=y}->case mouse_button of
+                    Mouse_button_left->case press of
+                        Press_down->let above=above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) in if above/=view_vector_bool widget extension_page_selected_index then (update_vector_bool (const True) extension_page_dirty_index (update_vector_bool (const above) extension_page_selected_index widget),id) else (widget,id)
+                        _->(widget,id)
                     _->(widget,id)
-                else (widget,id)
+                Move {x,y}->let above=above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) in if above/=view_vector_bool widget extension_page_hovered_index then (update_vector_bool (const True) extension_page_dirty_index (update_vector_bool (const above) extension_page_hovered_index widget),if above then \engine->engine {request=engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer}} else \engine->engine {request=engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default}}) else (widget,id)
+                Scroll {x,y,delta_y}->if above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) then (scroll_page (scroll_text (negate delta_y*step_size)) widget,id) else (widget,id)
                 _->(widget,id)
-            _->(widget,id)
-        else (widget,id)
+            else (widget,id)
         _->(widget,id)
     _->(widget,id)
 

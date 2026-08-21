@@ -4,7 +4,6 @@
 
 module Common where
 
-import Type
 import Engine.Helper
 import Engine.Operation
 import Engine.Type
@@ -29,16 +28,13 @@ above_extension_widget index x y widget=case widget of
     _->EE.quick_error "above_extension_widget" 1
 
 create_origin_rectangle_request::Color->FCT.CFloat->FCT.CFloat->Visual_request
-create_origin_rectangle_request color half_width half_height=case color of
-    Color {red,green,blue,alpha}->Rectangle_request {arrange=Arrange {point=origin,matrix=identity_matrix,red=red,green=green,blue=blue,alpha=alpha},rectangle_width=2*half_width,rectangle_height=2*half_height}
+create_origin_rectangle_request color half_width half_height=Rectangle_request {arrange=Arrange {point=origin,matrix=identity_matrix,color=color},rectangle_width=2*half_width,rectangle_height=2*half_height}
 
 create_rectangle_request::FCT.CFloat->FCT.CFloat->Color->FCT.CFloat->FCT.CFloat->Visual_request
-create_rectangle_request x y color half_width half_height=case color of
-    Color {red,green,blue,alpha}->Rectangle_request {arrange=Arrange {point=Point {x=x,y=y},matrix=identity_matrix,red=red,green=green,blue=blue,alpha=alpha},rectangle_width=2*half_width,rectangle_height=2*half_height}
+create_rectangle_request x y color half_width half_height=Rectangle_request {arrange=Arrange {point=Point {x=x,y=y},matrix=identity_matrix,color=color},rectangle_width=2*half_width,rectangle_height=2*half_height}
 
 create_triangle_request::FCT.CFloat->FCT.CFloat->Color->Point->Point->Point->Visual_request
-create_triangle_request x y color first_point second_point third_point=case color of
-    Color {red,green,blue,alpha}->Triangle_request {arrange=Arrange {point=Point {x=x,y=y},matrix=identity_matrix,red=red,green=green,blue=blue,alpha=alpha},first_point=first_point,second_point=second_point,third_point=third_point}
+create_triangle_request x y color first_point second_point third_point=Triangle_request {arrange=Arrange {point=Point {x=x,y=y},matrix=identity_matrix,color=color},first_point=first_point,second_point=second_point,third_point=third_point}
 
 extract_extension_widget_vector::Widget a b c d e->DV.Vector (Widget a b c d e)
 extract_extension_widget_vector this_widget=case this_widget of
