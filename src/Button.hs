@@ -60,13 +60,13 @@ button_widget_trigger this_action event _ widget=case event of
             then case action of
                 Click {press,mouse_button,x,y}->case mouse_button of
                     Mouse_button_left->case press of
-                        Press_up->if view_vector_bool widget extension_button_pressed_index then let new_widget=update_vector_bool (const True) extension_button_dirty_index (update_vector_bool (const False) extension_button_pressed_index widget) in if above_extension_widget extension_button_inner_rectangle_index x y (vector_widget DV.! extension_button_visual_index) then (new_widget,this_action) else (new_widget,id) else (widget,id)
                         Press_down->if above_extension_widget extension_button_inner_rectangle_index x y (vector_widget DV.! extension_button_visual_index) then (update_vector_bool (const True) extension_button_dirty_index (update_vector_bool (const True) extension_button_pressed_index widget),id) else (widget,id)
+                        Press_up->if view_vector_bool widget extension_button_pressed_index then let new_widget=update_vector_bool (const True) extension_button_dirty_index (update_vector_bool (const False) extension_button_pressed_index widget) in if above_extension_widget extension_button_inner_rectangle_index x y (vector_widget DV.! extension_button_visual_index) then (new_widget,this_action) else (new_widget,id) else (widget,id)
                     _->(widget,id)
                 Move {x,y}->let above=above_extension_widget extension_button_inner_rectangle_index x y (vector_widget DV.! extension_button_visual_index) in if above/=view_vector_bool widget extension_button_hovered_index then (update_vector_bool (const True) extension_button_dirty_index (update_vector_bool (const above) extension_button_hovered_index widget),if above then \engine->engine {request=engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer}} else \engine->engine {request=engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default}}) else (widget,id)
                 _->(widget,id)
             else (widget,id)
-        _->EE.quick_error "button_widget_trigger" 0
+        _->EE.empty_error
     _->(widget,id)
 
 view_button::Widget a b c d e->Widget a b c d e
