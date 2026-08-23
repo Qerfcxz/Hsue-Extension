@@ -17,6 +17,7 @@ library
         Common
         Integration
         Page
+        Slider
         Type
     build-depends:
         base ^>=4.20.2.0,
