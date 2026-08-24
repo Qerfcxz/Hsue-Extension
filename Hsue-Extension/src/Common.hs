@@ -29,7 +29,7 @@ above_extension_widget index x y widget=case widget of
     _->EF.empty_error
 
 create_origin_rectangle_request::ET.Has_call_stack=>Color->FCT.CFloat->FCT.CFloat->Visual_request
-create_origin_rectangle_request color half_width half_height=Rectangle_request {arrange=Arrange {point=origin,matrix=identity_matrix,color=color},rectangle_width=2*half_width,rectangle_height=2*half_height}
+create_origin_rectangle_request color half_width half_height=Rectangle_request {arrange=Arrange {point=origin_point,matrix=identity_matrix,color=color},rectangle_width=2*half_width,rectangle_height=2*half_height}
 
 create_rectangle_request::ET.Has_call_stack=>FCT.CFloat->FCT.CFloat->Color->FCT.CFloat->FCT.CFloat->Visual_request
 create_rectangle_request x y color half_width half_height=Rectangle_request {arrange=Arrange {point=Point {x=x,y=y},matrix=identity_matrix,color=color},rectangle_width=2*half_width,rectangle_height=2*half_height}
