@@ -98,9 +98,12 @@ page_widget_trigger step_size event _ widget=case event of
                     Mouse_button_left->case press of
                         Press_down->let above=above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) in if above/=view_vector_bool widget extension_page_selected_index then (update_vector_bool (const True) extension_page_dirty_index (update_vector_bool (const above) extension_page_selected_index widget),id) else (widget,id)
                         _->(widget,id)
+                    Mouse_button_right->case press of
+                        Press_down->let above=above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) in if above&&view_vector_bool widget extension_page_selected_index then (update_vector_bool (const True) extension_page_dirty_index (update_vector_bool (const False) extension_page_selected_index widget),id) else (widget,id)
+                        _->(widget,id)
                     _->(widget,id)
                 Move {x,y}->let above=above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) in if above/=view_vector_bool widget extension_page_hovered_index then (update_vector_bool (const True) extension_page_dirty_index (update_vector_bool (const above) extension_page_hovered_index widget),if above then \engine->engine {request=engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer}} else \engine->engine {request=engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default}}) else (widget,id)
-                Scroll {x,y,delta_y}->if above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) then (scroll_page (scroll_text (negate delta_y*step_size)) widget,id) else (widget,id)
+                Scroll {x,y,delta_y}->if view_vector_bool widget extension_page_selected_index&&above_extension_widget extension_page_inner_rectangle_index x y (vector_widget DV.! extension_page_visual_index) then (scroll_page (scroll_text (negate delta_y*step_size)) widget,id) else (widget,id)
                 _->(widget,id)
             else (widget,id)
         _->(widget,id)
