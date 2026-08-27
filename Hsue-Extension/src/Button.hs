@@ -54,7 +54,7 @@ extension_button_inner_rectangle_base_offset=1
 extension_button_outer_rectangle_base_offset::ET.Has_call_stack=>Int
 extension_button_outer_rectangle_base_offset=2
 
-button_widget_trigger::ET.Has_call_stack=>(Engine a b c d e->Engine a b c d e)->Event b->Engine a b c d e->Widget a b c d e->(Widget a b c d e,Engine a b c d e->Engine a b c d e)
+button_widget_trigger::ET.Has_call_stack=>(Engine a->Engine a)->Event a->Engine a->Widget a->(Widget a,Engine a->Engine a)
 button_widget_trigger this_action event _ widget=case event of
     At {window_id,action}->case widget of
         Vector {vector_widget}->if window_id==get_store_widget (vector_widget DV.! extension_button_window_id_index)
@@ -70,10 +70,10 @@ button_widget_trigger this_action event _ widget=case event of
         _->EF.empty_error
     _->(widget,id)
 
-view_button::ET.Has_call_stack=>Widget a b c d e->Widget a b c d e
+view_button::ET.Has_call_stack=>Widget a->Widget a
 view_button=view_extension_widget (view_extension_visual extension_button_visual_index extension_button_hovered_index extension_button_pressed_index extension_button_pressed_hovered_offset extension_button_pressed_unhovered_offset extension_button_unpressed_hovered_offset extension_button_unpressed_unhovered_offset extension_button_outer_rectangle_base_offset extension_button_inner_rectangle_base_offset extension_button_content_visual_index)
 
-update_button::ET.Has_call_stack=>Widget a b c d e->Maybe (Widget a b c d e)
+update_button::ET.Has_call_stack=>Widget a->Maybe (Widget a)
 update_button=update_extension_widget extension_button_dirty_index
 
 {-# INLINE extension_button_visual_index #-}
