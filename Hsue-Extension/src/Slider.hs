@@ -5,12 +5,12 @@
 module Slider where
 
 import Common
-import Page
+import Type
 import Engine.Container
-import Engine.Operation
 import Engine.Projection
 import Engine.Selector
 import Engine.Type
+import Engine.Underlying
 import qualified Error.Function as EF
 import qualified Error.Type as ET
 import qualified Control.Monad.ST as CMST
@@ -103,6 +103,11 @@ calculate_thumb_length content_size viewport_size min_thumb_length track_geometr
 calculate_thumb_position::ET.Has_call_stack=>Bool->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat
 calculate_thumb_position horizontal content_size viewport_size offset track_start_position track_end_position thumb_length=if content_size<=viewport_size then track_start_position+(track_end_position-track_start_position)/2 else if horizontal then track_start_position+(track_end_position-track_start_position-thumb_length)*offset/(content_size-viewport_size)+thumb_length/2 else track_start_position+(track_end_position-track_start_position+thumb_length)*offset/(content_size-viewport_size)-thumb_length/2
 
+create_slider_request::ET.Has_call_stack=>(Event a->Engine a->Maybe Int)->Extension_widget_request a->Widget_request a
+create_slider_request next slider_request=case slider_request of
+    Slider {window_id,arrange,leaf_id,selector,getter,setter,x,y,width,height,step_size,min_thumb_length,inner_thickness,outer_thickness,inner_color,outer_color,triangle_color,triangle_hovered_color,triangle_pressed_color,thumb_color,thumb_hovered_color,thumb_pressed_color,horizontal}->let center_x=arrange.point.x+x in let center_y=arrange.point.y+y in let half_width=width/2 in let half_height=height/2 in let inner_half_width=half_width-outer_thickness in let inner_half_height=half_height-outer_thickness in let radius=if horizontal then inner_half_height-inner_thickness else inner_half_width-inner_thickness in let first_triangle_center_x=if horizontal then center_x-inner_half_width+2*inner_thickness+radius else center_x in let first_triangle_center_y=if horizontal then center_y else center_y+inner_half_height-2*inner_thickness-radius in let second_triangle_center_x=if horizontal then center_x+inner_half_width-2*inner_thickness-radius else center_x in let second_triangle_center_y=if horizontal then center_y else center_y-inner_half_height+2*inner_thickness+radius in let first_triangle_first_point=if horizontal then Point {x=negate radius,y=0} else Point {x=0,y=radius} in let first_triangle_second_point=if horizontal then Point {x=radius,y=radius} else Point {x=negate radius,y=negate radius} in let first_triangle_third_point=Point {x=radius,y=negate radius} in let second_triangle_first_point=if horizontal then Point {x=radius,y=0} else Point {x=0,y=negate radius} in let second_triangle_second_point=Point {x=negate radius,y=radius} in let second_triangle_third_point=if horizontal then Point {x=negate radius,y=negate radius} else Point {x=radius,y=radius} in let thumb_base_half_width=if horizontal then 1 else radius in let thumb_base_half_height=if horizontal then radius else 1 in let track_start_position=if horizontal then center_x-inner_half_width+3*inner_thickness+2*radius else center_y+inner_half_height-3*inner_thickness-2*radius in let track_end_position=if horizontal then center_x+inner_half_width-3*inner_thickness-2*radius else center_y-inner_half_height+3*inner_thickness+2*radius in Widget_trigger_request {next=next,widget_trigger=slider_widget_trigger leaf_id selector getter setter center_x center_y radius track_start_position track_end_position step_size first_triangle_center_x first_triangle_center_y second_triangle_center_x second_triangle_center_y horizontal,widget_request=Vector_request {index=0,vector_widget_request=DS.fromList [Vector_visual_request {arrange=arrange {point=Point {x=center_x,y=center_y}},vector_visual_request=DV.fromList [create_rectangle_request center_x center_y outer_color half_width half_height,create_rectangle_request center_x center_y inner_color inner_half_width inner_half_height,create_triangle_request first_triangle_center_x first_triangle_center_y triangle_color first_triangle_first_point first_triangle_second_point first_triangle_third_point,create_triangle_request first_triangle_center_x first_triangle_center_y triangle_hovered_color first_triangle_first_point first_triangle_second_point first_triangle_third_point,create_triangle_request first_triangle_center_x first_triangle_center_y triangle_pressed_color first_triangle_first_point first_triangle_second_point first_triangle_third_point,create_triangle_request second_triangle_center_x second_triangle_center_y triangle_color second_triangle_first_point second_triangle_second_point second_triangle_third_point,create_triangle_request second_triangle_center_x second_triangle_center_y triangle_hovered_color second_triangle_first_point second_triangle_second_point second_triangle_third_point,create_triangle_request second_triangle_center_x second_triangle_center_y triangle_pressed_color second_triangle_first_point second_triangle_second_point second_triangle_third_point,create_rectangle_request center_x center_y thumb_color thumb_base_half_width thumb_base_half_height,create_rectangle_request center_x center_y thumb_hovered_color thumb_base_half_width thumb_base_half_height,create_rectangle_request center_x center_y thumb_pressed_color thumb_base_half_width thumb_base_half_height]},Store_request {store=convert window_id},Store_request {store=convert extension_slider_state_normal},Store_request {store=convert extension_slider_state_normal},Store_request {store=convert extension_slider_state_normal},Store_request {store=convert (0::FCT.CFloat)},Store_request {store=convert (0::FCT.CFloat)},Store_request {store=convert (0::FCT.CFloat)},Store_request {store=convert (abs (track_end_position-track_start_position))},Store_request {store=convert track_start_position},Store_request {store=convert (if horizontal then extension_slider_horizontal_flag_true else extension_slider_horizontal_flag_false)},Store_request {store=convert min_thumb_length},Store_request {store=convert center_x},Store_request {store=convert center_y},Store_request {store=convert True}]}}
+    _->EF.empty_error
+
 slider_widget_trigger::ET.Has_call_stack=>Int->Selector ()->(Widget a->(FCT.CFloat,FCT.CFloat,FCT.CFloat))->(FCT.CFloat->FCT.CFloat->Maybe (Widget a->Widget a))->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->Bool->Event a->Engine a->Widget a->(Widget a,Engine a->Engine a)
 slider_widget_trigger leaf_id selector getter setter this_x this_y radius track_start_position track_end_position step_size first_triangle_center_x first_triangle_center_y second_triangle_center_x second_triangle_center_y horizontal event engine widget=case event of
     At {window_id,action}->case widget of
@@ -143,58 +148,17 @@ update_thumb_arrange horizontal thumb_position x y arrange=case arrange of
     Arrange {matrix,color}->Arrange {point=Point {x=if horizontal then thumb_position else x,y=if horizontal then y else thumb_position},matrix=matrix,color=color}
 
 view_slider::ET.Has_call_stack=>Widget a->Widget a
-view_slider=view_extension_widget view_slider_a
+view_slider this_widget=view_slider_a (extract_extension_widget_vector this_widget)
 
 view_slider_a::ET.Has_call_stack=>DV.Vector (Widget a)->Widget a
 view_slider_a vector_widget=case vector_widget DV.! extension_slider_visual_index of
-    Vector_visual {arrange=first_arrange,vector_visual,size}->let thumb_state=get_store_widget (vector_widget DV.! extension_slider_thumb_state_index) in let thumb_length=get_store_widget (vector_widget DV.! extension_slider_thumb_length_index) in let thumb_position=get_store_widget (vector_widget DV.! extension_slider_thumb_position_index) in let horizontal=get_store_widget (vector_widget DV.! extension_slider_horizontal_index)==extension_slider_horizontal_flag_true in let x=get_store_widget (vector_widget DV.! extension_slider_x_index) in let y=get_store_widget (vector_widget DV.! extension_slider_y_index) in let thumb_visual=vector_visual DV.! (extension_slider_thumb_visual_base_index+thumb_state) in case thumb_visual of
-        Rectangle {arrange=second_arrange,half_width,half_height}->let new_vector_visual=DV.modify (\this_vector_visual->DVM.write this_vector_visual (extension_slider_thumb_visual_base_index+thumb_state) (Rectangle {arrange=update_thumb_arrange horizontal thumb_position x y second_arrange,half_width=if horizontal then thumb_length/2 else half_width,half_height=if horizontal then half_height else thumb_length/2})) vector_visual in Vector_visual {arrange=first_arrange,collect_order=DS.fromList [extension_slider_outer_rectangle_visual_index,extension_slider_inner_rectangle_visual_index,extension_slider_first_triangle_visual_base_index+get_store_widget (vector_widget DV.! extension_slider_first_triangle_state_index),extension_slider_second_triangle_visual_base_index+get_store_widget (vector_widget DV.! extension_slider_second_triangle_state_index),extension_slider_thumb_visual_base_index+thumb_state],vector_visual=new_vector_visual,size=size}
+    Vector_visual {arrange=first_arrange,vector_visual}->let thumb_state=get_store_widget (vector_widget DV.! extension_slider_thumb_state_index) in let thumb_length=get_store_widget (vector_widget DV.! extension_slider_thumb_length_index) in let thumb_position=get_store_widget (vector_widget DV.! extension_slider_thumb_position_index) in let horizontal=get_store_widget (vector_widget DV.! extension_slider_horizontal_index)==extension_slider_horizontal_flag_true in let x=get_store_widget (vector_widget DV.! extension_slider_x_index) in let y=get_store_widget (vector_widget DV.! extension_slider_y_index) in let thumb_visual=vector_visual DV.! (extension_slider_thumb_visual_base_index+thumb_state) in case thumb_visual of
+        Rectangle {arrange=second_arrange,half_width,half_height}->let new_vector_visual=CMST.runST (action_vector (\this_vector_visual->DVM.write this_vector_visual (extension_slider_thumb_visual_base_index+thumb_state) (Rectangle {arrange=update_thumb_arrange horizontal thumb_position x y second_arrange,half_width=if horizontal then thumb_length/2 else half_width,half_height=if horizontal then half_height else thumb_length/2})) vector_visual) in Vector_visual {arrange=first_arrange,vector_visual=new_vector_visual}
         _->EF.empty_error
     _->EF.empty_error
 
 update_slider::ET.Has_call_stack=>Widget a->Maybe (Widget a)
 update_slider=update_extension_widget extension_slider_dirty_index
-
-page_getter::ET.Has_call_stack=>Widget a->(FCT.CFloat,FCT.CFloat,FCT.CFloat)
-page_getter widget=case extract_extension_widget_vector widget DV.! extension_page_visual_index of
-    Vector_visual {vector_visual}->case vector_visual DV.! extension_page_text_visual_index of
-        Text {half_height,current_y,min_y,max_y}->(max_y-min_y+2*half_height,2*half_height,current_y-min_y)
-        _->EF.empty_error
-    _->EF.empty_error
-
-page_setter::ET.Has_call_stack=>FCT.CFloat->FCT.CFloat->Maybe (Widget a->Widget a)
-page_setter cached_offset offset=if cached_offset==offset then Nothing else Just (page_setter_a offset)
-
-page_setter_a::ET.Has_call_stack=>FCT.CFloat->Widget a->Widget a
-page_setter_a offset=modify_extension_widget (page_setter_b offset)
-
-page_setter_b::ET.Has_call_stack=>FCT.CFloat->Widget a->Widget a
-page_setter_b offset widget=case widget of
-    Vector {index,vector_widget}->Vector {index=index,vector_widget=CMST.runST (page_setter_c offset vector_widget)}
-    _->EF.empty_error
-
-page_setter_c::ET.Has_call_stack=>DVM.PrimMonad b=>FCT.CFloat->DV.Vector (Widget a)->b (DV.Vector (Widget a))
-page_setter_c offset vector_widget=do
-    new_vector_widget<-DV.thaw vector_widget
-    DVM.write new_vector_widget extension_page_visual_index (page_setter_d offset (vector_widget DV.! extension_page_visual_index))
-    DVM.write new_vector_widget extension_page_dirty_index (Store {store=convert True})
-    DV.unsafeFreeze new_vector_widget
-
-page_setter_d::ET.Has_call_stack=>FCT.CFloat->Widget a->Widget a
-page_setter_d offset widget=case widget of
-    Vector_visual {arrange,collect_order,vector_visual,size}->Vector_visual {arrange=arrange,collect_order=collect_order,vector_visual=CMST.runST (page_setter_e offset vector_visual),size=size}
-    _->EF.empty_error
-
-page_setter_e::ET.Has_call_stack=>DVM.PrimMonad b=>FCT.CFloat->DV.Vector (Visual a)->b (DV.Vector (Visual a))
-page_setter_e offset vector_visual=do
-    new_vector_visual<-DV.thaw vector_visual
-    DVM.write new_vector_visual extension_page_text_visual_index (page_setter_f offset (vector_visual DV.! extension_page_text_visual_index))
-    DV.unsafeFreeze new_vector_visual
-
-page_setter_f::ET.Has_call_stack=>FCT.CFloat->Visual a->Visual a
-page_setter_f offset visual=case visual of
-    Text {arrange,half_width,half_height,min_y,max_y,anchor,article,charset,locked}->Text {arrange=arrange,half_width=half_width,half_height=half_height,current_y=min_y+offset,min_y=min_y,max_y=max_y,anchor=anchor,article=article,charset=charset,locked=locked}
-    _->EF.empty_error
 
 {-# INLINE extension_slider_visual_index #-}
 {-# INLINE extension_slider_window_id_index #-}
@@ -224,17 +188,10 @@ page_setter_f offset visual=case visual of
 {-# INLINE above_thumb #-}
 {-# INLINE calculate_thumb_length #-}
 {-# INLINE calculate_thumb_position #-}
+{-# INLINE create_slider_request #-}
 {-# INLINE slider_widget_trigger #-}
 {-# INLINE set_slider_updated #-}
 {-# INLINE update_thumb_arrange #-}
 {-# INLINE view_slider #-}
 {-# INLINE view_slider_a #-}
 {-# INLINE update_slider #-}
-{-# INLINE page_getter #-}
-{-# INLINE page_setter #-}
-{-# INLINE page_setter_a #-}
-{-# INLINE page_setter_b #-}
-{-# INLINE page_setter_c #-}
-{-# INLINE page_setter_d #-}
-{-# INLINE page_setter_e #-}
-{-# INLINE page_setter_f #-}

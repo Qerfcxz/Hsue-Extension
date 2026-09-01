@@ -5,14 +5,54 @@
 module Common where
 
 import Engine.Helper
-import Engine.Operation
 import Engine.Type
 import Engine.Underlying
 import qualified Error.Function as EF
 import qualified Error.Type as ET
-import qualified Data.Sequence as DS
 import qualified Data.Vector as DV
 import qualified Foreign.C.Types as FCT
+
+extension_visual_index::ET.Has_call_stack=>Int
+extension_visual_index=0
+
+extension_hovered_index::ET.Has_call_stack=>Int
+extension_hovered_index=1
+
+extension_state_index::ET.Has_call_stack=>Int
+extension_state_index=2
+
+extension_dirty_index::ET.Has_call_stack=>Int
+extension_dirty_index=3
+
+extension_window_id_index::ET.Has_call_stack=>Int
+extension_window_id_index=4
+
+extension_content_index::ET.Has_call_stack=>Int
+extension_content_index=0
+
+extension_inner_rectangle_index::ET.Has_call_stack=>Int
+extension_inner_rectangle_index=1
+
+extension_root_vector_index::ET.Has_call_stack=>Int
+extension_root_vector_index=0
+
+extension_normal_unhovered_offset::ET.Has_call_stack=>Int
+extension_normal_unhovered_offset=0
+
+extension_normal_hovered_offset::ET.Has_call_stack=>Int
+extension_normal_hovered_offset=2
+
+extension_state_unhovered_offset::ET.Has_call_stack=>Int
+extension_state_unhovered_offset=4
+
+extension_state_hovered_offset::ET.Has_call_stack=>Int
+extension_state_hovered_offset=6
+
+extension_inner_base_offset::ET.Has_call_stack=>Int
+extension_inner_base_offset=1
+
+extension_outer_base_offset::ET.Has_call_stack=>Int
+extension_outer_base_offset=2
 
 above_box::ET.Has_call_stack=>FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->Bool
 above_box point_x point_y center_x center_y half_width half_height=abs (point_x-center_x)<=half_width&&abs (point_y-center_y)<=half_height
@@ -49,8 +89,8 @@ modify_extension_widget modify this_widget=case this_widget of
     Widget_trigger {next,widget_trigger,widget}->Widget_trigger {next=next,widget_trigger=widget_trigger,widget=modify widget}
     _->EF.empty_error
 
-view_extension_widget::ET.Has_call_stack=>(DV.Vector (Widget a)->Widget a)->Widget a->Widget a
-view_extension_widget view_vector this_widget=view_vector (extract_extension_widget_vector this_widget)
+view_extension_widget::ET.Has_call_stack=>Widget a->Widget a
+view_extension_widget this_widget=let vector_widget=extract_extension_widget_vector this_widget in vector_widget DV.! extension_visual_index
 
 update_extension_widget::ET.Has_call_stack=>Int->Widget a->Maybe (Widget a)
 update_extension_widget dirty_index this_widget=case this_widget of
@@ -69,11 +109,20 @@ view_vector_bool widget index=case widget of
 update_vector_bool::ET.Has_call_stack=>(Bool->Bool)->Int->Widget a->Widget a
 update_vector_bool update index=update_vector_widget index (update_store_widget update)
 
-view_extension_visual::ET.Has_call_stack=>Int->Int->Int->Int->Int->Int->Int->Int->Int->Int->DV.Vector (Widget a)->Widget a
-view_extension_visual visual_index hovered_index state_index state_hovered_offset state_unhovered_offset normal_hovered_offset normal_unhovered_offset outer_base inner_base content_index vector_widget=case vector_widget DV.! visual_index of
-    Vector_visual {arrange,vector_visual,size}->let hovered=get_store_widget (vector_widget DV.! hovered_index) in let offset=if get_store_widget (vector_widget DV.! state_index) then if hovered then state_hovered_offset else state_unhovered_offset else if hovered then normal_hovered_offset else normal_unhovered_offset in Vector_visual {arrange=arrange,collect_order=(outer_base+offset) DS.<| (inner_base+offset) DS.<| DS.singleton content_index,vector_visual=vector_visual,size=size}
-    _->EF.empty_error
-
+{-# INLINE extension_visual_index #-}
+{-# INLINE extension_hovered_index #-}
+{-# INLINE extension_state_index #-}
+{-# INLINE extension_dirty_index #-}
+{-# INLINE extension_window_id_index #-}
+{-# INLINE extension_content_index #-}
+{-# INLINE extension_inner_rectangle_index #-}
+{-# INLINE extension_root_vector_index #-}
+{-# INLINE extension_normal_unhovered_offset #-}
+{-# INLINE extension_normal_hovered_offset #-}
+{-# INLINE extension_state_unhovered_offset #-}
+{-# INLINE extension_state_hovered_offset #-}
+{-# INLINE extension_inner_base_offset #-}
+{-# INLINE extension_outer_base_offset #-}
 {-# INLINE above_box #-}
 {-# INLINE above_triangle #-}
 {-# INLINE above_extension_widget #-}
@@ -86,4 +135,3 @@ view_extension_visual visual_index hovered_index state_index state_hovered_offse
 {-# INLINE update_extension_widget #-}
 {-# INLINE view_vector_bool #-}
 {-# INLINE update_vector_bool #-}
-{-# INLINE view_extension_visual #-}
