@@ -90,7 +90,7 @@ modify_extension_widget modify this_widget=case this_widget of
     _->EF.empty_error
 
 view_extension_widget::ET.Has_call_stack=>Widget a->Widget a
-view_extension_widget this_widget=let vector_widget=extract_extension_widget_vector this_widget in vector_widget DV.! extension_visual_index
+view_extension_widget widget=let vector_widget=extract_extension_widget_vector widget in vector_widget DV.! extension_visual_index
 
 update_extension_widget::ET.Has_call_stack=>Int->Widget a->Maybe (Widget a)
 update_extension_widget dirty_index this_widget=case this_widget of
