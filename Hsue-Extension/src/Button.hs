@@ -24,9 +24,9 @@ create_button_request next action button_request=case button_request of
 
 create_button_visual::ET.Has_call_stack=>Custom_extension a=>Extension_visual_request a->Engine a->IO (Engine a,Extension_visual a)
 create_button_visual button_request engine=case button_request of
-    Button_request {window_id,arrange,x,y,button_width,button_height,inner_thickness,outer_thickness,anchor,article,load,color,outer_color,hovered_color,outer_hovered_color,pressed_color,outer_pressed_color,hovered_pressed_color,outer_hovered_pressed_color}->let text_width=max 0 (button_width-2*inner_thickness) in let text_height=max 0 (button_height-2*inner_thickness) in do
-        (new_engine,text_visual)<-create_visual (Text_request {arrange=default_arrange {point=Point {x=x,y=y}},text_width=text_width,text_height=text_height,max_search_index=negate 1,calculate_width=const (const (const (1/0))),calculate_typesetting=button_calculate_typesetting text_height,anchor=anchor,article=article,load=load}) engine
-        return (new_engine,Button {window_id=window_id,arrange=arrange,x=x,y=y,half_width=button_width/2,half_height=button_height/2,inner_thickness=inner_thickness,outer_thickness=outer_thickness,dirty=True,hovered=False,pressed=False,color=color,outer_color=outer_color,hovered_color=hovered_color,outer_hovered_color=outer_hovered_color,pressed_color=pressed_color,outer_pressed_color=outer_pressed_color,hovered_pressed_color=hovered_pressed_color,outer_hovered_pressed_color=outer_hovered_pressed_color,text=text_visual})
+    Button_request {window_id,arrange,x,y,button_width,button_height,inner_thickness,outer_thickness,anchor,article,load,color,outer_color,hovered_color,outer_hovered_color,pressed_color,outer_pressed_color,hovered_pressed_color,outer_hovered_pressed_color,strict_exist,strict_match}->let text_height=max 0 (button_height-2*inner_thickness) in do
+        (new_engine,text_visual)<-create_visual (Text_request {arrange=default_arrange,text_width=max 0 (button_width-2*inner_thickness),text_height=text_height,failure_advance=0,failure_left=0,failure_down=0,failure_right=0,failure_up=0,max_search_index=negate 1,calculate_width=const (const (const (1/0))),calculate_typesetting=button_calculate_typesetting text_height,anchor=anchor,article=article,load=load}) engine
+        return (new_engine,Button {window_id=window_id,arrange=arrange,x=x,y=y,half_width=button_width/2,half_height=button_height/2,inner_thickness=inner_thickness,outer_thickness=outer_thickness,dirty=True,hovered=False,pressed=False,color=color,outer_color=outer_color,hovered_color=hovered_color,outer_hovered_color=outer_hovered_color,pressed_color=pressed_color,outer_pressed_color=outer_pressed_color,hovered_pressed_color=hovered_pressed_color,outer_hovered_pressed_color=outer_hovered_pressed_color,text=text_visual,strict_exist=strict_exist,strict_match=strict_match})
     _->EF.empty_error
 
 button_calculate_typesetting::ET.Has_call_stack=>FCT.CFloat->DS.Seq (DS.Seq Row)->Int->Int->(FCT.CFloat,FCT.CFloat,FCT.CFloat)
@@ -41,21 +41,21 @@ get_button_color hovered pressed normal hovered_color pressed_color hovered_pres
 
 update_button_state::ET.Has_call_stack=>Bool->Bool->Bool->Bool->Extension_visual a->Extension_visual a
 update_button_state strict_match dirty hovered pressed button=case button of
-    Button {window_id,arrange,x,y,half_width,half_height,inner_thickness,outer_thickness,color,outer_color,hovered_color,outer_hovered_color,pressed_color,outer_pressed_color,hovered_pressed_color,outer_hovered_pressed_color,text}->Button {window_id=window_id,arrange=arrange,x=x,y=y,half_width=half_width,half_height=half_height,inner_thickness=inner_thickness,outer_thickness=outer_thickness,dirty=dirty,hovered=hovered,pressed=pressed,color=color,outer_color=outer_color,hovered_color=hovered_color,outer_hovered_color=outer_hovered_color,pressed_color=pressed_color,outer_pressed_color=outer_pressed_color,hovered_pressed_color=hovered_pressed_color,outer_hovered_pressed_color=outer_hovered_pressed_color,text=text}
+    Button {}->button {dirty=dirty,hovered=hovered,pressed=pressed}
     _->if strict_match then EF.empty_error else button
 
 button_visual_trigger::ET.Has_call_stack=>Custom_extension a=>(Engine a->Engine a)->Event a->Engine a->Visual a->(Visual a,Engine a->Engine a)
-button_visual_trigger this_action event engine visual=case event of
+button_visual_trigger this_action event _ visual=case event of
     At {window_id=this_window_id,action}->case visual of
         Custom_visual {custom}->case custom of
-            Button {window_id,arrange,x,y,half_width,half_height,hovered,pressed}->if this_window_id==window_id
+            Button {window_id,arrange,x,y,half_width,half_height,hovered,pressed,strict_exist,strict_match}->if this_window_id==window_id
                 then case action of
                     Click {press,mouse_button,x=click_x,y=click_y}->case mouse_button of
                         Mouse_button_left->case press of
-                            Press_down->let above=above_extension_box click_x click_y arrange x y half_width half_height in if above then (Custom_visual {custom=update_button_state engine.strict_match True hovered True custom},id) else (visual,id)
-                            Press_up->if pressed then let new_button=update_button_state engine.strict_match True hovered False custom in if above_extension_box click_x click_y arrange x y half_width half_height then (Custom_visual {custom=new_button},this_action) else (Custom_visual {custom=new_button},id) else (visual,id)
+                            Press_down->let above=above_extension_box click_x click_y arrange x y half_width half_height in if above then (Custom_visual {custom=update_button_state strict_match True hovered True custom},id) else (visual,id)
+                            Press_up->if pressed then let above=above_extension_box click_x click_y arrange x y half_width half_height in let new_button=update_button_state strict_match True above False custom in if above then (Custom_visual {custom=new_button},this_action) else (Custom_visual {custom=new_button},id) else (visual,id)
                         _->(visual,id)
-                    Move {x=move_x,y=move_y}->let above=above_extension_box move_x move_y arrange x y half_width half_height in if above/=hovered then (Custom_visual {custom=update_button_state engine.strict_match True above pressed custom},if above then \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer}} else \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default}}) else (visual,id)
+                    Move {x=move_x,y=move_y}->let above=above_extension_box move_x move_y arrange x y half_width half_height in if above/=hovered then (Custom_visual {custom=update_button_state strict_match True above pressed custom},if above then \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer,strict_exist=strict_exist}} else \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default,strict_exist=strict_exist}}) else (visual,id)
                     _->(visual,id)
                 else (visual,id)
             _->(visual,id)
@@ -65,9 +65,8 @@ button_visual_trigger this_action event engine visual=case event of
 collect_button_visual::ET.Has_call_stack=>Custom_extension a=>(Arrange->Arrange)->FCT.CFloat->FCT.CFloat->Maybe (Border FCT.CFloat)->Extension_visual a->DS.Seq (Submit a)
 collect_button_visual transform u v maybe_border button=case button of
     Button {arrange,x,y,half_width,half_height,inner_thickness,outer_thickness,hovered,pressed,color,outer_color,hovered_color,outer_hovered_color,pressed_color,outer_pressed_color,hovered_pressed_color,outer_hovered_pressed_color,text}->case text of
-        Text {arrange=text_arrange,current_y,anchor,article}->case transform arrange of
-            Arrange {point=new_point,matrix=new_matrix,color=new_color}->case text_arrange of
-                Arrange {matrix=text_matrix,color=text_color}->let base_point=Point {x=new_point.x+x,y=new_point.y+y} in DS.fromList [create_submit_rectangle Submit_default maybe_border (Arrange {point=base_point,matrix=new_matrix,color=multiply_color new_color (get_button_color hovered pressed outer_color outer_hovered_color outer_pressed_color outer_hovered_pressed_color)}) (half_width+outer_thickness) (half_height+outer_thickness) u v u v,create_submit_rectangle Submit_default maybe_border (Arrange {point=base_point,matrix=new_matrix,color=multiply_color new_color (get_button_color hovered pressed color hovered_color pressed_color hovered_pressed_color)}) half_width half_height u v u v,create_submit_text Submit_default maybe_border (Arrange {point=base_point,matrix=multiply_matrix new_matrix text_matrix,color=multiply_color new_color text_color}) (half_width-inner_thickness) (half_height-inner_thickness) current_y anchor article]
+        Text {arrange=text_arrange,current_y,anchor,article}->let button_arrange=combine_arrange (transform arrange) (default_arrange {point=Point {x=x,y=y}}) in case button_arrange of
+            Arrange {point=button_point,matrix=button_matrix,color=button_base_color}->create_submit_rectangle Submit_default maybe_border (Arrange {point=button_point,matrix=button_matrix,color=multiply_color button_base_color (get_button_color hovered pressed outer_color outer_hovered_color outer_pressed_color outer_hovered_pressed_color)}) (half_width+outer_thickness) (half_height+outer_thickness) u v u v DS.<| create_submit_rectangle Submit_default maybe_border (Arrange {point=button_point,matrix=button_matrix,color=multiply_color button_base_color (get_button_color hovered pressed color hovered_color pressed_color hovered_pressed_color)}) half_width half_height u v u v DS.<| DS.singleton (create_submit_text Submit_default maybe_border (combine_arrange button_arrange text_arrange) (half_width-inner_thickness) (half_height-inner_thickness) current_y anchor article)
         _->EF.empty_error
     _->EF.empty_error
 
