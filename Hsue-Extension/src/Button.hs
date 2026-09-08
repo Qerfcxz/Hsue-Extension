@@ -19,7 +19,7 @@ import qualified Foreign.C.Types as FCT
 
 create_button_request::ET.Has_call_stack=>Custom_extension a=>(Event a->Engine a->Maybe Int)->(Engine a->Engine a)->Extension_visual_request a->Widget_request a
 create_button_request next action button_request=case button_request of
-    Button_request {}->Visual_trigger_request {next=next,visual_trigger=button_visual_trigger action,visual_request=Custom_visual_request {custom=button_request}}
+    Button_request {}->Visual_trigger_request {next=next,visual_trigger=button_visual_trigger action,visual_request=Custom_visual_request {visual_request_custom=button_request}}
     _->EF.empty_error
 
 create_button_visual::ET.Has_call_stack=>Custom_extension a=>Extension_visual_request a->Engine a->IO (Engine a,Extension_visual a)
@@ -47,15 +47,15 @@ update_button_state strict_match dirty hovered pressed button=case button of
 button_visual_trigger::ET.Has_call_stack=>Custom_extension a=>(Engine a->Engine a)->Event a->Engine a->Visual a->(Visual a,Engine a->Engine a)
 button_visual_trigger this_action event _ visual=case event of
     At {window_id=this_window_id,action}->case visual of
-        Custom_visual {custom}->case custom of
+        Custom_visual {visual_custom}->case visual_custom of
             Button {window_id,arrange,x,y,half_width,half_height,hovered,pressed,strict_exist,strict_match}->if this_window_id==window_id
                 then case action of
                     Click {press,mouse_button,x=click_x,y=click_y}->case mouse_button of
                         Mouse_button_left->case press of
-                            Press_down->let above=above_extension_box click_x click_y arrange x y half_width half_height in if above then (Custom_visual {custom=update_button_state strict_match True hovered True custom},id) else (visual,id)
-                            Press_up->if pressed then let above=above_extension_box click_x click_y arrange x y half_width half_height in let new_button=update_button_state strict_match True above False custom in if above then (Custom_visual {custom=new_button},this_action) else (Custom_visual {custom=new_button},id) else (visual,id)
+                            Press_down->let above=above_extension_box click_x click_y arrange x y half_width half_height in if above then (Custom_visual {visual_custom=update_button_state strict_match True hovered True visual_custom},id) else (visual,id)
+                            Press_up->if pressed then let above=above_extension_box click_x click_y arrange x y half_width half_height in let new_button=update_button_state strict_match True above False visual_custom in if above then (Custom_visual {visual_custom=new_button},this_action) else (Custom_visual {visual_custom=new_button},id) else (visual,id)
                         _->(visual,id)
-                    Move {x=move_x,y=move_y}->let above=above_extension_box move_x move_y arrange x y half_width half_height in if above/=hovered then (Custom_visual {custom=update_button_state strict_match True above pressed custom},if above then \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer,strict_exist=strict_exist}} else \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default,strict_exist=strict_exist}}) else (visual,id)
+                    Move {x=move_x,y=move_y}->let above=above_extension_box move_x move_y arrange x y half_width half_height in if above/=hovered then (Custom_visual {visual_custom=update_button_state strict_match True above pressed visual_custom},if above then \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_pointer,strict_exist=strict_exist}} else \this_engine->this_engine {request=this_engine.request DS.|> Set_system_cursor {system_cursor=System_cursor_default,strict_exist=strict_exist}}) else (visual,id)
                     _->(visual,id)
                 else (visual,id)
             _->(visual,id)

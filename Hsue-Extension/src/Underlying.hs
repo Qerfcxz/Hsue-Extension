@@ -5,8 +5,15 @@
 module Underlying where
 
 import Engine.Type
+import Engine.Helper
 import qualified Error.Type as ET
+import qualified Data.HashMap.Strict as DHMS
+import qualified Data.HashSet as DHS
+import qualified Data.Map as DM
 import qualified Foreign.C.Types as FCT
+
+to_key_setting::ET.Has_call_stack=>DM.Map (DHS.HashSet Key) a->DHMS.HashMap Integer a
+to_key_setting=DM.foldlWithKey' (\key_setting key value->insert_foldable_enumeration key value key_setting) DHMS.empty
 
 above_box::ET.Has_call_stack=>FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->FCT.CFloat->Bool
 above_box x y center_x center_y half_width half_height=abs (x-center_x)<=half_width&&abs (y-center_y)<=half_height
